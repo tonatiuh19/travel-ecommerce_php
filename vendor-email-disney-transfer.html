@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VENDOR ALERT - Disney Transfer Service - {{reservation_code}}</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 20px;
+      }
+
+      .email-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(106, 143, 167, 0.2);
+      }
+
+      .header {
+        background: linear-gradient(135deg, #e91e63 0%, #9c27b0 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+          repeat;
+        opacity: 0.1;
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .alert-badge {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        padding: 10px 20px;
+        display: inline-block;
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      .header p {
+        font-size: 18px;
+        opacity: 0.9;
+        margin-bottom: 10px;
+      }
+
+      .service-type {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 8px 16px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .content {
+        padding: 40px 30px;
+      }
+
+      .urgent-info {
+        background: linear-gradient(135deg, #e91e63, #9c27b0);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      .urgent-info h3 {
+        margin-bottom: 10px;
+        font-size: 24px;
+      }
+
+      .reservation-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin: 30px 0;
+      }
+
+      .detail-section {
+        background: #f8fafb;
+        border-left: 4px solid #e91e63;
+        padding: 25px;
+        border-radius: 8px;
+      }
+
+      .detail-title {
+        color: #e91e63;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+      }
+
+      .detail-title::before {
+        content: "●";
+        margin-right: 10px;
+        font-size: 12px;
+      }
+
+      .detail-item {
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .detail-value {
+        color: #666;
+        font-size: 14px;
+        text-align: right;
+        flex: 1;
+        margin-left: 10px;
+      }
+
+      .customer-info {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        border: 2px solid #e91e63;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 25px 0;
+      }
+
+      .disney-specifics {
+        background: #fff0f6;
+        border: 2px solid #e91e63;
+        border-radius: 12px;
+        padding: 25px;
+        margin: 25px 0;
+      }
+
+      .disney-highlights {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      .highlight-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 3px solid #e91e63;
+      }
+
+      .highlight-item strong {
+        color: #e91e63;
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .action-required {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      .action-required h3 {
+        margin-bottom: 15px;
+        font-size: 20px;
+      }
+
+      .action-list {
+        text-align: left;
+        margin: 15px 0;
+      }
+
+      .action-list li {
+        margin-bottom: 8px;
+        padding-left: 10px;
+      }
+
+      .contact-urgent {
+        background: #1f2937;
+        color: white;
+        padding: 30px;
+        text-align: center;
+        border-radius: 0 0 15px 15px;
+      }
+
+      .contact-urgent h3 {
+        color: #e91e63;
+        margin-bottom: 15px;
+      }
+
+      .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .contact-item {
+        background: rgba(233, 30, 99, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(233, 30, 99, 0.3);
+      }
+
+      @media (max-width: 768px) {
+        .email-container {
+          margin: 10px;
+          border-radius: 10px;
+        }
+
+        .header,
+        .content {
+          padding: 20px;
+        }
+
+        .reservation-details,
+        .disney-highlights,
+        .contact-grid {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="header">
+        <div class="header-content">
+          <div class="alert-badge">🚨 NUEVA RESERVA - ACCIÓN INMEDIATA</div>
+          <h1>Transporte a Disneyland París</h1>
+          <p>Código de Reserva: <strong>{{reservation_code}}</strong></p>
+          <div class="service-type">🏰 DISNEY TRANSFER SERVICE</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="urgent-info">
+          <h3>🏰 DESTINO: DISNEYLAND PARÍS</h3>
+          <p><strong>Fecha de Servicio:</strong> {{pickup_datetime}}</p>
+          <p><strong>Tipo de Recogida:</strong> {{pickup_type}}</p>
+          <p>
+            <strong>Destino Final:</strong> Disneyland París (Marne-la-Vallée)
+          </p>
+          <p><strong>Urgencia:</strong> {{urgency_trip}}</p>
+        </div>
+
+        <div class="reservation-details">
+          <div class="detail-section">
+            <div class="detail-title">📋 Detalles de la Reserva</div>
+            <div class="detail-item">
+              <span class="detail-label">Código:</span>
+              <span class="detail-value">{{reservation_code}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Fecha de Reserva:</span>
+              <span class="detail-value">{{created_at}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Total Pagado:</span>
+              <span class="detail-value">€{{price_eur}} EUR</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">ID Stripe:</span>
+              <span class="detail-value">{{stripe_id}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Pasajeros:</span>
+              <span class="detail-value">{{passengers}} personas</span>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <div class="detail-title">📍 Información de Recogida</div>
+            <div class="detail-item">
+              <span class="detail-label">Origen:</span>
+              <span class="detail-value">{{origin}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Dirección:</span>
+              <span class="detail-value">{{pickup_address}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Fecha:</span>
+              <span class="detail-value">{{pickup_datetime}}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Tipo:</span>
+              <span class="detail-value">Solo ida a Disney</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="customer-info">
+          <div class="detail-title">👤 Información del Cliente</div>
+          <div class="reservation-details">
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Nombre:</span>
+                <span class="detail-value">{{name}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">{{email}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Teléfono:</span>
+                <span class="detail-value">{{phone}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">User ID:</span>
+                <span class="detail-value">{{user_id}}</span>
+              </div>
+            </div>
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Accesibilidad Silla de Ruedas:</span>
+                <span class="detail-value">{{wheelchair_access}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Notas Especiales:</span>
+                <span class="detail-value">{{special_note}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Hotel (si aplica):</span>
+                <span class="detail-value">{{pickup_hotel_name}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Fecha de Regreso:</span>
+                <span class="detail-value">{{return_datetime}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flight Information Section (if applicable) -->
+        <div
+          class="detail-section"
+          style="
+            grid-column: span 2;
+            background: #e0f7fa;
+            border-left: 4px solid #0277bd;
+          "
+        >
+          <div class="detail-title" style="color: #0277bd">
+            ✈️ Información de Vuelo (si aplica)
+          </div>
+          <div class="reservation-details">
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Aeropuerto:</span>
+                <span class="detail-value">{{pickup_airport}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Número de Vuelo:</span>
+                <span class="detail-value">{{pickup_flight_number}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Aerolínea:</span>
+                <span class="detail-value">{{pickup_airline}}</span>
+              </div>
+            </div>
+            <div>
+              <div class="detail-item">
+                <span class="detail-label">Terminal:</span>
+                <span class="detail-value">{{pickup_terminal}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Hotel (si aplica):</span>
+                <span class="detail-value">{{pickup_hotel_name}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Dirección Específica:</span>
+                <span class="detail-value">{{pickup_address}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="disney-specifics">
+          <div class="detail-title">
+            🏰 Especificaciones del Transporte a Disney
+          </div>
+          <p>
+            <strong>Tipo de Servicio:</strong> Transfer directo de punto de
+            origen a Disneyland París (solo ida)
+          </p>
+
+          <div class="disney-highlights">
+            <div class="highlight-item">
+              <strong>🚐 Punto de Recogida</strong>
+              {{origin}} - {{pickup_address}}
+            </div>
+            <div class="highlight-item">
+              <strong>🏰 Destino Final</strong>
+              Disneyland París (Parque Principal)
+            </div>
+            <div class="highlight-item">
+              <strong>⏰ Fecha de Recogida</strong>
+              {{pickup_datetime}} (puntualidad crítica)
+            </div>
+            <div class="highlight-item">
+              <strong>🎫 Tipo de Transfer</strong>
+              Solo ida - Sin regreso incluido
+            </div>
+          </div>
+
+          <div
+            style="
+              margin-top: 20px;
+              padding: 15px;
+              background: rgba(233, 30, 99, 0.1);
+              border-radius: 8px;
+            "
+          >
+            <strong>⚠️ IMPORTANTE:</strong> Este es un servicio de transporte
+            SOLO IDA a Disneyland París. El cliente es responsable de su propio
+            transporte de regreso. Asegúrese de que el cliente comprenda esto.
+          </div>
+
+          <div
+            style="
+              margin-top: 15px;
+              padding: 15px;
+              background: #e3f2fd;
+              border-radius: 8px;
+            "
+          >
+            <strong>📍 Destino Exacto:</strong> Disneyland París, Parque
+            Principal<br />
+            <strong>📍 Dirección:</strong> Bd de Parc, 77700 Coupvray,
+            Francia<br />
+            <strong>⏱️ Tiempo estimado de viaje:</strong> 45-60 minutos desde
+            París centro
+          </div>
+        </div>
+
+        <div class="action-required">
+          <h3>🚨 ACCIONES REQUERIDAS INMEDIATAMENTE</h3>
+          <ul class="action-list">
+            <li>
+              ✅ Confirmar disponibilidad del vehículo para la fecha y hora
+            </li>
+            <li>✅ Asignar conductor con experiencia en ruta a Disney</li>
+            <li>✅ Verificar dirección exacta de recogida</li>
+            <li>✅ Contactar al cliente 24 horas antes para confirmación</li>
+            <li>
+              ✅ Preparar carteles de identificación con el nombre del cliente
+            </li>
+            <li>✅ Confirmar que el cliente entiende que es SOLO IDA</li>
+            <li>
+              ✅ Proporcionar información sobre opciones de regreso (RER, taxi,
+              etc.)
+            </li>
+          </ul>
+          <p style="margin-top: 15px">
+            <strong
+              >⏰ Tiempo límite para confirmación: 2 horas después de recibir
+              este email</strong
+            >
+          </p>
+        </div>
+
+        <div
+          style="
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+          "
+        >
+          <h4 style="color: #2e7d32; margin-bottom: 10px">
+            💡 Notas Importantes Disney Transfer
+          </h4>
+          <ul style="color: #555">
+            <li><strong>Solo ida:</strong> No incluye transporte de regreso</li>
+            <li>
+              <strong>Puntualidad:</strong> Crítica - Disney tiene horarios
+              estrictos
+            </li>
+            <li>
+              <strong>Equipaje:</strong> Considerar maletas si vienen del hotel
+            </li>
+            <li><strong>Duración:</strong> 45-60 minutos desde París centro</li>
+            <li>
+              <strong>Alternativas de regreso:</strong> RER A4, taxi, Uber
+              disponibles
+            </li>
+            <li>
+              <strong>Información adicional:</strong> Proporcionar mapa y
+              opciones de regreso
+            </li>
+          </ul>
+        </div>
+
+        <div
+          style="
+            background: #fff3e0;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+          "
+        >
+          <h4 style="color: #ef6c00; margin-bottom: 10px">
+            🎫 Información Útil para el Cliente
+          </h4>
+          <p style="color: #555; margin-bottom: 10px">
+            <strong>Horarios del Parque:</strong> Generalmente 10:00 - 22:00
+            (verificar calendario Disney)
+          </p>
+          <p style="color: #555; margin-bottom: 10px">
+            <strong>Opciones de Regreso:</strong>
+          </p>
+          <ul style="color: #555">
+            <li>
+              RER A4 (tren) desde Marne-la-Vallée hasta París (más económico)
+            </li>
+            <li>Taxi o Uber (más cómodo pero más caro)</li>
+            <li>Transfer privado (pueden reservar por separado)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="contact-urgent">
+        <h3>📞 CONTACTO URGENTE</h3>
+        <p>Para confirmación inmediata y coordinación del servicio</p>
+
+        <div class="contact-grid">
+          <div class="contact-item">
+            <strong>📱 WhatsApp Urgente</strong><br />
+            +33 6 51 21 82 12
+          </div>
+          <div class="contact-item">
+            <strong>📧 Email Directo</strong><br />
+            reservas@latinosporeuropa.com
+          </div>
+          <div class="contact-item">
+            <strong>🌐 Portal Web</strong><br />
+            https://latinosporeuropa.com/
+          </div>
+          <div class="contact-item">
+            <strong>⏰ Disponibilidad</strong><br />
+            24/7 para emergencias
+          </div>
+        </div>
+
+        <div
+          style="
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(233, 30, 99, 0.2);
+            border-radius: 8px;
+          "
+        >
+          <strong>🚨 RESPUESTA REQUERIDA EN MÁXIMO 2 HORAS</strong><br />
+          Este servicio requiere confirmación inmediata. El cliente espera
+          transporte solo de ida a Disney.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

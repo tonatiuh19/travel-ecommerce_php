@@ -1,0 +1,31 @@
+[16-Oct-2025 16:35:59 America/Mexico_City] Van Transfer Booking Request: Array
+(
+    [firstName] => John
+    [lastName] => Doe
+    [email] => axgoomez@gmail.com
+    [phone] => +33 6 12 34 56 78
+    [country] => Francia
+    [transferType] => photo-tour
+    [destinationId] => 
+    [passengerCount] => 4
+    [isRoundTrip] => 
+    [requiresWheelchairAccess] => 
+    [pickupType] => hotel
+    [pickupName] => Hotel Test
+    [pickupAddress] => Adddresss test
+    [pickupAirportId] => 
+    [pickupTerminalId] => 
+    [pickupFlightNumber] => 
+    [serviceDate] => 2025-10-19
+    [serviceTime] => 10:00
+    [returnDate] => 
+    [returnTime] => 18:00
+    [basePrice] => 350
+    [emergencyFee] => 35
+    [serviceFee] => 32.725
+    [totalPrice] => 417.725
+    [specialRequests] => This is a test booking
+    [stripePaymentMethodId] => pm_1SIzm5RqF6G0XdPCtx8VR3Z7
+    [paymentType] => card
+)
+
