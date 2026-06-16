@@ -1,31 +1,37 @@
-[16-Oct-2025 16:35:59 America/Mexico_City] Van Transfer Booking Request: Array
+[21-Nov-2025 11:00:02 America/Mexico_City] Van Transfer Booking Request: Array
 (
-    [firstName] => John
-    [lastName] => Doe
-    [email] => axgoomez@gmail.com
-    [phone] => +33 6 12 34 56 78
-    [country] => Francia
-    [transferType] => photo-tour
-    [destinationId] => 
-    [passengerCount] => 4
+    [firstName] => Alex
+    [lastName] => Gomez
+    [email] => tonatiuh.gom@gmail.com
+    [phone] => +52 4741400363
+    [country] => México
+    [transferType] => one-day-tour
+    [destinationId] => 5
+    [passengerCount] => 2
     [isRoundTrip] => 
     [requiresWheelchairAccess] => 
     [pickupType] => hotel
     [pickupName] => Hotel Test
-    [pickupAddress] => Adddresss test
+    [pickupAddress] => Test
     [pickupAirportId] => 
     [pickupTerminalId] => 
     [pickupFlightNumber] => 
-    [serviceDate] => 2025-10-19
+    [serviceDate] => 2025-12-06
     [serviceTime] => 10:00
     [returnDate] => 
     [returnTime] => 18:00
-    [basePrice] => 350
-    [emergencyFee] => 35
-    [serviceFee] => 32.725
-    [totalPrice] => 417.725
-    [specialRequests] => This is a test booking
-    [stripePaymentMethodId] => pm_1SIzm5RqF6G0XdPCtx8VR3Z7
+    [basePrice] => 13773.5
+    [emergencyFee] => 0
+    [serviceFee] => 1170.75
+    [totalPrice] => 14944.25
+    [couponId] => 
+    [couponCode] => 
+    [discountAmount] => 0
+    [finalPrice] => 705.25
+    [specialRequests] => 
+    [stripePaymentMethodId] => pm_1SVxgjRqF6G0XdPCQ7Hr4hBp
     [paymentType] => card
+    [totalPriceEur] => 705.25
 )
 
+[21-Nov-2025 11:00:05 America/Mexico_City] Confirmation email sent successfully to: tonatiuh.gom@gmail.com

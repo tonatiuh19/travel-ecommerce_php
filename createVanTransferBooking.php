@@ -74,7 +74,7 @@ if ($method == 'POST') {
 
     // Extract booking data
     $transferType = $params['transferType'];
-    $destinationId = $params['destinationId'] ?? null;
+    $destinationId = !empty($params['destinationId']) ? (int)$params['destinationId'] : null;
     $passengerCount = (int) $params['passengerCount'];
     $isRoundTrip = (bool) $params['isRoundTrip'];
     $requiresWheelchairAccess = (bool) ($params['requiresWheelchairAccess'] ?? false);
@@ -100,6 +100,13 @@ if ($method == 'POST') {
     $emergencyFee = (float) ($params['emergencyFee'] ?? 0);
     $serviceFee = (float) $params['serviceFee'];
     $totalPrice = (float) $params['totalPrice'];
+    $totalPriceEur = (float) ($params['totalPriceEur'] ?? 0);
+    
+    // Coupon information
+    $couponId = $params['couponId'] ?? null;
+    $couponCode = $params['couponCode'] ?? null;
+    $discountAmount = (float) ($params['discountAmount'] ?? 0);
+    $finalPrice = (float) ($params['finalPrice'] ?? $totalPrice);
     
     // Special requests
     $specialRequests = $params['specialRequests'] ?? null;
@@ -202,6 +209,54 @@ if ($method == 'POST') {
     $stmt->close();
 
     // ========================================
+    // VALIDATE AND APPLY COUPON (IF PROVIDED)
+    // ========================================
+    if ($couponId && $couponCode) {
+        // Verify coupon exists and is still valid
+        $sql = "SELECT id, code, discount_type, discount_value, usage_limit, usage_count 
+                FROM coupons 
+                WHERE id = ? 
+                AND code = ? 
+                AND is_active = TRUE 
+                AND (valid_from IS NULL OR valid_from <= NOW())
+                AND (valid_until IS NULL OR valid_until >= NOW())
+                AND (usage_limit IS NULL OR usage_count < usage_limit)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("is", $couponId, $couponCode);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            echo json_encode(['error' => 'Invalid or expired coupon code']);
+            $stmt->close();
+            $conn->close();
+            exit;
+        }
+        
+        $couponData = $result->fetch_assoc();
+        $stmt->close();
+        
+        // Verify discount calculation matches
+        $expectedDiscount = 0;
+        if ($couponData['discount_type'] === 'percentage') {
+            $expectedDiscount = ($totalPrice * (float)$couponData['discount_value']) / 100;
+        } else {
+            $expectedDiscount = (float)$couponData['discount_value'];
+        }
+        
+        // Allow small rounding differences (0.01)
+        if (abs($expectedDiscount - $discountAmount) > 0.01) {
+            error_log("Coupon discount mismatch - Expected: $expectedDiscount, Received: $discountAmount");
+        }
+        
+        // Verify final price calculation
+        $expectedFinalPrice = $totalPrice - $discountAmount;
+        if (abs($expectedFinalPrice - $finalPrice) > 0.01) {
+            error_log("Final price mismatch - Expected: $expectedFinalPrice, Received: $finalPrice");
+        }
+    }
+
+    // ========================================
     // PROCESS STRIPE PAYMENT
     // ========================================
     $stripePaymentIntentId = null;
@@ -223,7 +278,18 @@ if ($method == 'POST') {
             
             if ($customerData && !empty($customerData['stripe_customer_id'])) {
                 $stripeCustomerId = $customerData['stripe_customer_id'];
-            } else {
+                
+                // Verify the customer exists in the current Stripe environment
+                try {
+                    $stripe->customers->retrieve($stripeCustomerId);
+                } catch (\Stripe\Exception\InvalidRequestException $e) {
+                    // Customer doesn't exist in this environment, create a new one
+                    error_log("Stripe customer $stripeCustomerId not found in current environment, creating new one");
+                    $stripeCustomerId = null;
+                }
+            }
+            
+            if (empty($stripeCustomerId)) {
                 // Create new Stripe customer
                 $stripeCustomer = $stripe->customers->create([
                     'name' => "$firstName $lastName",
@@ -234,16 +300,16 @@ if ($method == 'POST') {
                     ]
                 ]);
                 $stripeCustomerId = $stripeCustomer->id;
-                    // Update customer with Stripe ID
-                    $sql = "UPDATE customers SET stripe_customer_id = ? WHERE id = ?";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("si", $stripeCustomerId, $customerId);
-                    $stmt->execute();
-                    $stmt->close();
+                // Update customer with Stripe ID
+                $sql = "UPDATE customers SET stripe_customer_id = ? WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("si", $stripeCustomerId, $customerId);
+                $stmt->execute();
+                $stmt->close();
             }
 
             // Process payment using PaymentMethods API
-            $amountInCents = (int) round($totalPrice * 100);
+            $amountInCents = (int) round($totalPrice * 100); // Use final price after discount
             
             // 1. Attach the payment method to the customer
             $stripe->paymentMethods->attach(
@@ -263,7 +329,9 @@ if ($method == 'POST') {
                     'customer_id' => $customerId,
                     'transfer_type' => $transferType,
                     'passenger_count' => $passengerCount,
-                    'service_date' => $serviceDate
+                    'service_date' => $serviceDate,
+                    'coupon_code' => $couponCode ?? '',
+                    'discount_amount' => $discountAmount
                 ]
             ]);
             
@@ -273,7 +341,7 @@ if ($method == 'POST') {
             if ($paymentIntent->status === 'succeeded') {
                 $paymentStatus = 'paid';
                 
-                // 3. Create transfer to connected account
+                // 3. Create transfer to connected account (based on final price after discount)
                 $transferAmount = calculateTransferAmount($totalPrice);
                 $connectedAccountId = getConnectedAccountId($isTestMode);
                 
@@ -289,7 +357,9 @@ if ($method == 'POST') {
                         'customer_id' => $customerId,
                         'service_type' => $transferType,
                         'total_amount' => $amountInCents,
-                        'service_fee_rate' => '8.5%'
+                        'service_fee_rate' => '8.5%',
+                        'coupon_applied' => $couponCode ?? 'none',
+                        'discount_amount' => $discountAmount
                     ]
                 ]);
             } else {
@@ -367,12 +437,16 @@ if ($method == 'POST') {
         emergency_fee, 
         service_fee, 
         total_price,
+        coupon_id,
+        coupon_code,
+        discount_amount,
+        final_price,
         special_requests,
         status,
         payment_status,
         stripe_payment_method_id,
         stripe_payment_intent_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
@@ -382,7 +456,7 @@ if ($method == 'POST') {
     }
 
     $stmt->bind_param(
-        "siiiiiiissiiissssddddsssss",
+        "siiiiiiiissiiissssddddisddssss",
         $bookingReference,
         $customerId,
         $transferTypeId,
@@ -404,6 +478,10 @@ if ($method == 'POST') {
         $emergencyFee,
         $serviceFee,
         $totalPrice,
+        $couponId,
+        $couponCode,
+        $discountAmount,
+        $finalPrice,
         $specialRequests,
         $bookingStatus,
         $paymentStatus,
@@ -414,6 +492,48 @@ if ($method == 'POST') {
     if ($stmt->execute()) {
         $bookingId = $stmt->insert_id;
         $stmt->close();
+
+        // ========================================
+        // RETRIEVE COMPLETE BOOKING DATA
+        // ========================================
+        $sql = "SELECT 
+                    b.*,
+                    c.first_name,
+                    c.last_name,
+                    c.email,
+                    c.phone,
+                    c.country,
+                    tt.name as transfer_type_name,
+                    d.name as destination_name,
+                    pt.name as pickup_type_name,
+                    pt.type_key as pickup_type_key,
+                    a.name as airport_name,
+                    at.terminal_name
+                FROM bookings b
+                JOIN customers c ON b.customer_id = c.id
+                JOIN transfer_types tt ON b.transfer_type_id = tt.id
+                JOIN pickup_types pt ON b.pickup_type_id = pt.id
+                LEFT JOIN destinations d ON b.destination_id = d.id
+                LEFT JOIN airports a ON b.pickup_airport_id = a.id
+                LEFT JOIN airport_terminals at ON b.pickup_terminal_id = at.id
+                WHERE b.id = ?";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $bookingId);
+        $stmt->execute();
+        $booking = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        // ========================================
+        // INCREMENT COUPON USAGE COUNT
+        // ========================================
+        if ($couponId && $paymentStatus === 'paid') {
+            $sql = "UPDATE coupons SET usage_count = usage_count + 1 WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $couponId);
+            $stmt->execute();
+            $stmt->close();
+        }
 
         // ========================================
         // SEND EMAIL NOTIFICATION
@@ -487,23 +607,24 @@ if ($method == 'POST') {
                 $pricing_breakdown .= '<div class="info-section">';
                 $pricing_breakdown .= '<div class="info-title">Desglose de Precios</div>';
                 $pricing_breakdown .= '<p style="color: #666; line-height: 1.6">';
-                $pricing_breakdown .= '<strong>Precio Base:</strong> €' . number_format($basePrice, 2) . '<br>';
                 
-                if ($emergencyFee > 0) {
-                    $pricing_breakdown .= '<strong>Tarifa de Emergencia:</strong> €' . number_format($emergencyFee, 2) . '<br>';
-                }
+                // Use EUR prices for email display
+                $displayTotal = $totalPriceEur > 0 ? $totalPriceEur : $totalPrice;
+                $displayFinal = $totalPriceEur > 0 ? $totalPriceEur : $finalPrice;
                 
-                $pricing_breakdown .= '<strong>Tarifa de Servicio:</strong> €' . number_format($serviceFee, 2) . '<br>';
-                $pricing_breakdown .= '<strong>Total:</strong> €' . number_format($totalPrice, 2) . '<br>';
+                $pricing_breakdown .= '<strong>Total:</strong> €' . number_format($displayTotal, 2) . '<br>';
+                
                 $pricing_breakdown .= '<strong>Estado del Pago:</strong> ' . $payment_status_spanish;
                 $pricing_breakdown .= '</p></div>';
 
                 // Replace placeholders in email template
+                $emailDisplayPrice = $totalPriceEur > 0 ? $totalPriceEur : ($discountAmount > 0 ? $finalPrice : $totalPrice);
+                
                 $replacements = [
                     '{{name}}' => htmlspecialchars($customer_name),
                     '{{reservation_code}}' => htmlspecialchars($bookingReference),
                     '{{service_type}}' => htmlspecialchars($service_type_display),
-                    '{{price}}' => number_format($totalPrice, 2),
+                    '{{price}}' => number_format($emailDisplayPrice, 2),
                     '{{currency}}' => 'EUR',
                     '{{created_at}}' => date('d/m/Y H:i'),
                     '{{status}}' => $booking_status_spanish
@@ -593,6 +714,9 @@ if ($method == 'POST') {
             'customer_id' => $customerId,
             'payment_status' => $paymentStatus,
             'stripe_payment_intent_id' => $stripePaymentIntentId,
+            'coupon_applied' => $couponCode,
+            'discount_amount' => $discountAmount,
+            'final_price' => $finalPrice,
             'booking' => $booking
         ]);
     } else {
